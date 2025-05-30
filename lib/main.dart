@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/timer_service.dart';
+import 'services/settings_provider.dart';
+import 'screens/about_screen.dart';
+import 'screens/settings_screen.dart';
+import 'l10n/app_localizations.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => SettingsProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -10,18 +21,49 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Focus Plus',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: const Color(0xFFFF4B4B),
-        scaffoldBackgroundColor: const Color(0xFF1E1E1E),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFFF4B4B),
-          secondary: Color(0xFFFF4B4B),
-        ),
-      ),
-      home: const PomodoroTimer(),
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return MaterialApp(
+          title: 'Focus Plus',
+          theme: ThemeData(
+            brightness: Brightness.light,
+            primaryColor: const Color(0xFF0569FC),
+            scaffoldBackgroundColor: Colors.white,
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF0569FC),
+              secondary: Color(0xFF0569FC),
+            ),
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            primaryColor: const Color(0xFF0569FC),
+            scaffoldBackgroundColor: const Color(0xFF1E1E1E),
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF0569FC),
+              secondary: Color(0xFF0569FC),
+            ),
+          ),
+          themeMode: settings.themeMode,
+          locale: settings.locale,
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en'),
+            Locale('ru'),
+            Locale('kk'),
+          ],
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const PomodoroTimer(),
+            '/about': (context) => const AboutScreen(),
+            '/settings': (context) => const SettingsScreen(),
+          },
+        );
+      },
     );
   }
 }
@@ -38,6 +80,7 @@ class _PomodoroTimerState extends State<PomodoroTimer> {
   int _minutes = 25;
   int _seconds = 0;
   int _focusCount = 0;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -73,34 +116,12 @@ class _PomodoroTimerState extends State<PomodoroTimer> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // Menu Button
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: Implement menu
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Theme.of(context).primaryColor),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'MENU',
-                      style: TextStyle(color: Theme.of(context).primaryColor),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
             // Timer Display
             Expanded(
               child: Center(
@@ -121,7 +142,7 @@ class _PomodoroTimerState extends State<PomodoroTimer> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         4,
-                            (index) => Padding(
+                        (index) => Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
                             Icons.water_drop,
@@ -133,7 +154,7 @@ class _PomodoroTimerState extends State<PomodoroTimer> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      _getModeText(_timerService.currentMode),
+                      _getModeText(_timerService.currentMode, l10n),
                       style: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontSize: 20,
@@ -154,7 +175,7 @@ class _PomodoroTimerState extends State<PomodoroTimer> {
                     icon: Icon(
                       _timerService.isRunning ? Icons.pause : Icons.play_arrow,
                       size: 32,
-                      color: Colors.white,
+                      color: Theme.of(context).primaryColor,
                     ),
                     onPressed: () {
                       setState(() {
@@ -168,10 +189,10 @@ class _PomodoroTimerState extends State<PomodoroTimer> {
                   ),
                   if (_timerService.isRunning)
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.stop,
                         size: 32,
-                        color: Colors.white,
+                        color: Theme.of(context).primaryColor,
                       ),
                       onPressed: () {
                         setState(() {
@@ -185,13 +206,46 @@ class _PomodoroTimerState extends State<PomodoroTimer> {
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          switch (index) {
+            case 0:
+              Navigator.pushNamed(context, '/');
+              break;
+            case 1:
+              Navigator.pushNamed(context, '/about');
+              break;
+            case 2:
+              Navigator.pushNamed(context, '/settings');
+              break;
+          }
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.timer),
+            label: l10n.timer,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.info),
+            label: l10n.about,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.settings),
+            label: l10n.settings,
+          ),
+        ],
+      ),
     );
   }
 
-  String _getModeText(TimerMode mode) {
+  String _getModeText(TimerMode mode, AppLocalizations l10n) {
     switch (mode) {
       case TimerMode.focus:
-        return 'FOCUS';
+        return l10n.focus;
       case TimerMode.shortBreak:
         return 'SHORT BREAK';
       case TimerMode.longBreak:

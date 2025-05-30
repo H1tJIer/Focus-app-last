@@ -3,14 +3,19 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/timer_service.dart';
 import 'services/settings_provider.dart';
+import 'services/auth_service.dart';
 import 'screens/about_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/login_screen.dart';
 import 'l10n/app_localizations.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => SettingsProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => AuthService()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -21,8 +26,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
+    return Consumer2<SettingsProvider, AuthService>(
+      builder: (context, settings, auth, child) {
         return MaterialApp(
           title: 'Focus Plus',
           theme: ThemeData(
@@ -56,9 +61,10 @@ class MyApp extends StatelessWidget {
             Locale('ru'),
             Locale('kk'),
           ],
-          initialRoute: '/',
+          initialRoute: auth.isAuthenticated ? '/home' : '/login',
           routes: {
-            '/': (context) => const PomodoroTimer(),
+            '/login': (context) => const LoginScreen(),
+            '/home': (context) => const PomodoroTimer(),
             '/about': (context) => const AboutScreen(),
             '/settings': (context) => const SettingsScreen(),
           },

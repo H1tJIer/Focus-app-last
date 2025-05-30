@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "862260255079",
+    "project_id": "focusapplast",
+    "storage_bucket": "focusapplast.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862260255079:android:ac2ac0595baf581ecff7c2",
+        "android_client_info": {
+          "package_name": "com.example.focusp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2J2UwteMYgL78VgmL1JYWySsPRCYDScI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
